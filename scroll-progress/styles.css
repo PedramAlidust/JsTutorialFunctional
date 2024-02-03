@@ -14,13 +14,14 @@ h1 {
 
 .gauge-svg {
   position: fixed;
-  top: 80%;
-  left: 90%;
+  bottom: 0;
+  right: 0;
   transform: rotate(180deg);
+  margin: 20px; /* Adjust this value to add some margin from the edges */
 }
 
 .gauge-path {
-  stroke-width: 2;
+  stroke-width: 6;
   stroke-dasharray: 1000;
   stroke-dashoffset: 1000;
 }
