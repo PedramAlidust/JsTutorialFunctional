@@ -6,8 +6,13 @@ let enemySpeed = 0.05;
 let canShoot = true;
 let score = 0;
 let highScore = 0;
-let keys = {};
-
+let kills = 0;
+let maxKills = 10;
+let gameDuration = 10000; // 10 seconds in milliseconds
+let startTime, gameOver = false;
+let keys = {}; 
+let collisionThreshold = 5; // Distance threshold for collision detection
+ 
 function init() {
     // Set up the scene
     scene = new THREE.Scene();
@@ -32,15 +37,23 @@ function init() {
     // Add event listener for key presses
     document.addEventListener('keydown', (event) => {
         keys[event.key] = true;
-        if (event.key === ' ') {
+        if (event.key === ' ' && !gameOver) {
             shoot();
         }
+        if (event.key === 'r' && gameOver) {
+            resetGame();
+        }
     }, false);
-    document.addEventListener('keyup', (event) => keys[event.key] = false, false);
+    document.addEventListener('keyup', (event) => {
+        keys[event.key] = false;
+    }, false);
 
     // Display score
     displayScores();
 
+    // Start the game timer
+    startTime = Date.now();
+    
     // Start render loop
     animate();
 }
@@ -62,6 +75,10 @@ function shoot() {
         const bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
         const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
         bullet.position.copy(player.position);
+        bullet.position.z += 1; // Ensure bullet is in front of the player
+
+        // Set bullet direction
+        bullet.velocity = new THREE.Vector3(0, 0, -bulletSpeed); // Move bullets in the direction opposite to camera view
         scene.add(bullet);
         bullets.push(bullet);
         canShoot = false;
@@ -91,57 +108,131 @@ function displayScores() {
     document.getElementById('score').innerHTML = `Score: ${score} <br> High Score: ${highScore}`;
 }
 
+function displayGameOver() {
+    const gameOverDiv = document.getElementById('game-over');
+    if (!gameOverDiv) {
+        const newDiv = document.createElement('div');
+        newDiv.id = 'game-over';
+        newDiv.style.position = 'absolute';
+        newDiv.style.top = '50%';
+        newDiv.style.left = '50%';
+        newDiv.style.transform = 'translate(-50%, -50%)';
+        newDiv.style.color = 'red';
+        newDiv.style.fontSize = '40px';
+        newDiv.style.textAlign = 'center';
+        newDiv.innerHTML = `Game Over<br>Your Score: ${score}<br>Press R to Restart`;
+        document.body.appendChild(newDiv);
+    }
+}
+
+function resetGame() {
+    gameOver = false;
+    score = 0;
+    kills = 0;
+    player.position.set(0, 0, 0);
+
+    // Remove existing enemies and bullets
+    enemies.forEach(enemy => scene.remove(enemy));
+    bullets.forEach(bullet => scene.remove(bullet));
+    enemies = [];
+    bullets = [];
+
+    // Create new enemies
+    for (let i = 0; i < 5; i++) {
+        createEnemy();
+    }
+
+    // Remove game over message
+    const gameOverDiv = document.getElementById('game-over');
+    if (gameOverDiv) {
+        gameOverDiv.remove();
+    }
+
+    // Update score display
+    displayScores();
+
+    // Reset timer
+    startTime = Date.now();
+}
+
+function isCollision(bullet, enemy) {
+    // Define the distance between the center of the bullet and enemy
+    const distance = bullet.position.distanceTo(enemy.position);
+
+    // Check if the distance is less than the threshold
+    return distance < collisionThreshold;
+}
+
 function animate() {
     requestAnimationFrame(animate);
 
-    // Move player smoothly
-    movePlayer();
+    if (!gameOver) {
+        // Move player smoothly
+        movePlayer();
 
-    // Move bullets
-    for (let i = 0; i < bullets.length; i++) {
-        bullets[i].position.z -= bulletSpeed;
-        if (bullets[i].position.z < -50) {
-            scene.remove(bullets[i]);
-            bullets.splice(i, 1);
-            i--;
-        }
-    }
-
-    // Move enemies
-    for (let i = 0; i < enemies.length; i++) {
-        enemies[i].position.z += enemySpeed;
-        if (enemies[i].position.z > 20) {
-            enemies[i].position.z = -20;
-            enemies[i].position.x = Math.random() * 20 - 10;
-            enemies[i].position.y = Math.random() * 20 - 10;
-        }
-    }
-
-    // Check for collisions between bullets and enemies
-    for (let i = 0; i < bullets.length; i++) {
-        for (let j = 0; j < enemies.length; j++) {
-            if (bullets[i].position.distanceTo(enemies[j].position) < 1) { // Increased collision radius
-                // Remove bullet and enemy from the scene
-                scene.remove(bullets[i]);
+        // Move bullets
+        for (let i = 0; i < bullets.length; i++) {
+            let bullet = bullets[i];
+            bullet.position.add(bullet.velocity);
+            if (bullet.position.z < -50) { // Adjust this boundary as needed
+                scene.remove(bullet);
                 bullets.splice(i, 1);
                 i--;
-
-                scene.remove(enemies[j]);
-                enemies.splice(j, 1);
-                j--;
-
-                // Increase score and update display
-                score++;
-                if (score > highScore) {
-                    highScore = score;
-                }
-                displayScores();
-
-                // Create a new enemy to replace the killed one
-                createEnemy();
-                break;
             }
         }
+
+        // Move enemies
+        for (let i = 0; i < enemies.length; i++) {
+            enemies[i].position.z += enemySpeed;
+            if (enemies[i].position.z > 20) {
+                enemies[i].position.z = -20;
+                enemies[i].position.x = Math.random() * 20 - 10;
+                enemies[i].position.y = Math.random() * 20 - 10;
+            }
+        }
+
+        // Check for collisions between bullets and enemies
+        for (let i = 0; i < bullets.length; i++) {
+            for (let j = 0; j < enemies.length; j++) {
+                if (isCollision(bullets[i], enemies[j])) {
+                    // Remove bullet and enemy from the scene
+                    scene.remove(bullets[i]);
+                    bullets.splice(i, 1);
+                    i--;
+
+                    scene.remove(enemies[j]);
+                    enemies.splice(j, 1);
+                    j--;
+
+                    // Increase score and kills
+                    score++;
+                    kills++;
+                    if (score > highScore) {
+                        highScore = score;
+                    }
+                    displayScores();
+
+                    // Create a new enemy to replace the killed one
+                    createEnemy();
+                    break;
+                }
+            }
+        }
+
+        // Check if the game is over due to timeout
+        const elapsedTime = Date.now() - startTime;
+        if (elapsedTime >= gameDuration) {
+            if (kills < maxKills) {
+                gameOver = true;
+                displayGameOver();
+                return;
+            }
+        }
+    }
+
+    // Check if the 'R' key is pressed to restart
+    if (keys['r'] && gameOver) {
+        resetGame();
     }
 
     renderer.render(scene, camera);
