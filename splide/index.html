@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Splide Slider</title>
+  <!-- Include Splide CSS -->
+  <link rel="stylesheet" href="splide/dist/css/splide.min.css">
+  <style>
+    /* Additional styles for the sliders */
+    #main-slider {
+      position: relative;
+      width: 80%;
+      margin: auto;
+    }
+
+    #thumbnail-slider {
+      margin-top: 10px;
+    }
+
+    .splide__slide img {
+      width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Main slider -->
+  <div id="main-slider" class="splide">
+    <div class="splide__track">
+      <ul class="splide__list">
+        <li class="splide__slide">
+            <img src="/images/01.jpg">
+        <li class="splide__slide">
+            <img src="/images/02.jpg">
+        <li class="splide__slide">
+            <img src="/images/03.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/04.jpg">
+        </li>  
+        <li class="splide__slide">
+            <img src="/images/05.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/06.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/07.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/08.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/09.jpg">
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Thumbnail slider -->
+  <div id="thumbnail-slider" class="splide">
+    <div class="splide__track">
+      <ul class="splide__list">
+        <li class="splide__slide">
+            <img src="/images/01.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/02.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/03.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/04.jpg">
+        </li>  
+        <li class="splide__slide">
+            <img src="/images/05.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/06.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/07.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/08.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/09.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/09.jpg">
+        </li>
+        <li class="splide__slide">
+            <img src="/images/09.jpg">
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Include Splide JS -->
+  <script src="splide/dist/js/splide.min.js"></script>
+  <script>
+   var main = new Splide( '#main-slider', {
+  type       : 'fade',
+  heightRatio: 0.5,
+  pagination : false,
+  arrows     : false,
+  cover      : true,
+} );
+
+var thumbnails = new Splide( '#thumbnail-slider', {
+  rewind          : true,
+  fixedWidth      : 104,
+  fixedHeight     : 58,
+  isNavigation    : true,
+  gap             : 10,
+  focus           : 'center',
+  pagination      : false,
+  cover           : true,
+  dragMinThreshold: {
+    mouse: 4,
+    touch: 10,
+  },
+  breakpoints : {
+    640: {
+      fixedWidth  : 66,
+      fixedHeight : 38,
+    },
+  },
+} );
+
+main.sync( thumbnails );
+main.mount();
+thumbnails.mount();
+  </script>
+
+</body>
+</html>
